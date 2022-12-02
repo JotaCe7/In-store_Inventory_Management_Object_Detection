@@ -21,7 +21,7 @@ $ docker build -t ins_inv_mng_obj_detect_gpu_jc --build-arg USER_ID=$(id -u) --b
 - **CPU:**
 
 ```bash
-$ docker run --rm --net host --gpus all -it -v "$(pwd)":/home/app/src --workdir /home/app/src ins_inv_mng_obj_detect_jc bash
+$ docker run --rm --net host -it -v "$(pwd)":/home/app/src --workdir /home/app/src ins_inv_mng_obj_detect_jc bash
 ```
 
 - **GPU:**
