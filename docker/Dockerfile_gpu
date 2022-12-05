@@ -1,4 +1,4 @@
-FROM python:3.8.13 as base
+FROM nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04 as base
 
 ARG USER_ID
 ARG GROUP_ID
@@ -19,14 +19,21 @@ RUN apt-get update && \
 # Add a non-root user
 RUN addgroup --gid $GROUP_ID app
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID app
-
-RUN apt-get install -y curl
 USER app
 
+# Setup some paths
+ENV PYTHONPATH=/home/app/.local/lib/python3.8/site-packages:/home/app/src
+ENV PATH=$PATH:/home/app/.local/bin
+
 # Install the python packages for this new user
-COPY requirements.txt .
+ADD requirements.txt .
 RUN pip3 install -r requirements.txt
 
+# Tensorflow (and Keras) with GPU support
+RUN pip3 install tensorflow-gpu==2.8.0
+
+# PyTorch GPU 1.10
+RUN pip3 install torch==1.10.0+cu111 torchvision==0.11.0+cu111 torchaudio==0.10.0 -f https://download.pytorch.org/whl/torch_stable.html
 
 RUN mkdir -p /home/app/scripts
 COPY download-vs-code-server.sh /home/app/scripts
@@ -47,5 +54,4 @@ WORKDIR /home/app
 # Call run docker without 'bash' at the end
 CMD "." "/home/app/scripts/add_env_path.sh" ;"bash"
 
-
-# docker build -t ins_inv_mng_obj_detect_jc --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) -f docker/Dockerfile .
+# docker build -t ins_inv_mng_obj_detect_gpu_jc --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) -f docker/Dockerfile_gpu .
