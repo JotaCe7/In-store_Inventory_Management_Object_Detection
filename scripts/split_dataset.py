@@ -41,6 +41,7 @@ import argparse
 import os
 import pandas as pd
 import numpy as np
+import yaml
 
 IMAGES_PATH = '/home/app/src/data/SKU-110K_fixed/images/'
 ANNOTATIONS_PATH = '/home/app/src/data/SKU-110K_fixed/annotations/'
@@ -130,3 +131,7 @@ if __name__ == "__main__":
           os.makedirs(os.path.join(args.output_data_folder,'labels', typeset))
         # Create structure for a given set (train, val or test)
         main(args.data_folder, os.path.join(args.labels, annotation_file), args.output_data_folder)
+
+    # config_dict = {'path': '../data', 'train': 'images/train', 'val':'images/val', 'test':'images/test', 'nc': 1, 'names':["object"]}
+    # with open(os.path.join(args.output_data_folder, 'config.yaml'), 'w') as file:
+    #   yaml.dump(config_dict, file)
