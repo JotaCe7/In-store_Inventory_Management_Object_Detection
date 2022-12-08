@@ -14,7 +14,8 @@ RUN apt-get update && \
     libxext6 \
     nano \
     wget \
-    curl
+    curl \
+    git
 
 # Add a non-root user
 RUN addgroup --gid $GROUP_ID app
