@@ -1,1 +1,7 @@
-/data
+images
+labels/
+SKU-110K_fixed/
+experiments/
+BadPeggy-2.4.0/
+*.cache
+*.pt

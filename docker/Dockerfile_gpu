@@ -36,9 +36,11 @@ RUN pip3 install tensorflow-gpu==2.8.0
 # PyTorch GPU 1.10
 RUN pip3 install torch==1.10.0+cu111 torchvision==0.11.0+cu111 torchaudio==0.10.0 -f https://download.pytorch.org/whl/torch_stable.html
 
+# Download and instal visual studio code server
 RUN mkdir -p /home/app/scripts
 COPY download-vs-code-server.sh /home/app/scripts
 WORKDIR /home/app
+## Change owner and add execution permission to app user
 USER root
 RUN chmod +x /home/app/scripts/download-vs-code-server.sh
 RUN chown app /home/app/scripts/download-vs-code-server.sh
@@ -47,7 +49,13 @@ RUN /home/app/scripts/download-vs-code-server.sh
 USER root
 COPY add_env_path.sh /home/app/scripts
 RUN chmod +x /home/app/scripts/add_env_path.sh
+
+
 USER app
+# Clone yolov5 repository and install requirements
+RUN git clone https://github.com/ultralytics/yolov5
+RUN pip install -r /home/app/yolov5/requirements.txt
+
 
 WORKDIR /home/app
 

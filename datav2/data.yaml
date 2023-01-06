@@ -1,0 +1,15 @@
+names:
+- '-'
+- \
+- missing
+- product
+nc: 4
+roboflow:
+  license: CC BY 4.0
+  project: empty-spaces-in-a-supermarket-hanger-1upsp
+  url: https://universe.roboflow.com/final-project-object-detection-for-instore-inventory-management/empty-spaces-in-a-supermarket-hanger-1upsp/dataset/26
+  version: 26
+  workspace: final-project-object-detection-for-instore-inventory-management
+test: /home/app/src/datav2/test/images
+train: /home/app/src/datav2/train/images
+val: /home/app/src/datav2/val/images

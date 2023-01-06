@@ -42,10 +42,12 @@ import os
 import pandas as pd
 import numpy as np
 import yaml
+from tqdm import tqdm
 
 IMAGES_PATH = '/home/app/src/data/SKU-110K_fixed/images/'
 ANNOTATIONS_PATH = '/home/app/src/data/SKU-110K_fixed/annotations/'
 OUTPUT_PATH = '/home/app/src/data/'
+CORRUPTED_IMGS_FILE_PATH = '/home/app/src/data/badpeggy_list.txt'
 COLUMNS = ['img_name','xi','yi','xf','yf','label','w','h']
 
 def parse_args():
@@ -55,8 +57,8 @@ def parse_args():
         type=str,
         default=IMAGES_PATH,
         help=(
-            "Full path to the directory having all the cars images. E.g. "
-            "`/home/app/src/data/car_ims/`."
+            "Full path to the directory having all the images. E.g. "
+            "`/home/app/src/data/SKU-110K_fixed/images/`."
         ),
     )
     parser.add_argument(
@@ -64,8 +66,8 @@ def parse_args():
         type=str,
         default=ANNOTATIONS_PATH,
         help=(
-            "Full path to the CSV file with data labels. E.g. "
-            "`/home/app/src/data/car_dataset_labels.csv`."
+            "Full path to the directory having all CSV file with data labels."
+            "E.g. '/home/app/src/data/SKU-110K_fixed/annotations/'."
         ),
     )
     parser.add_argument(
@@ -74,8 +76,18 @@ def parse_args():
         default=OUTPUT_PATH,
         help=(
             "Full path to the directory in which we will store the resulting "
-            "train/test splits. E.g. `/home/app/src/data/car_ims_v1/`."
+            "train/test splits. E.g. `/home/app/src/data/`."
         ),
+    )
+
+    parser.add_argument(
+      "--corrupted_imgs_txt",
+      type=str,
+      default=CORRUPTED_IMGS_FILE_PATH,
+      help=(
+        "Full path to txt file with corrupted images"
+        "E.g.''/home/app/src/data/badpeggy_list.txt''"
+      )
     )
 
     args = parser.parse_args()
@@ -83,7 +95,7 @@ def parse_args():
     return args
 
 
-def main(data_folder, labels, output_data_folder):
+def main(data_folder, labels, output_data_folder, corrupted_imgs_txt):
     """
     Create images and labels structure for a givin annotation set
     Parameters
@@ -100,6 +112,7 @@ def main(data_folder, labels, output_data_folder):
     """
     # Get the type of set, train, val or test
     typeset = os.path.splitext(os.path.basename(labels))[0].split("_")[1]
+    print("Create foler structure for", typeset, 'set')
     # Load labels as a dataframe
     annotations_df = pd.read_csv(os.path.join(labels), header=None)
     annotations_df.columns = COLUMNS
@@ -111,8 +124,15 @@ def main(data_folder, labels, output_data_folder):
     annotations_df['cy'] = (annotations_df['yi'] + annotations_df['yf'])/(2*annotations_df['h'])
     annotations_df['wb'] = (annotations_df['xf'] - annotations_df['xi'])/(annotations_df['w'])
     annotations_df['hb'] = (annotations_df['yf'] - annotations_df['yi'])/(annotations_df['h'])
+    # Get list of corrupted images from corrupted_imgs_txt
+    corrupted_df = pd.read_csv(corrupted_imgs_txt, header=None, names=['Path'])
+    corrupted_list = corrupted_df['Path'].str.split(pat='/').str[-1].tolist()
+    # Remove corrupted images from images_list
+    images_list = list(set(images_list) - set(corrupted_list))
+
+
     # Loop over the images and create dataset (images and labels text files)
-    for image_name in images_list:
+    for image_name in tqdm(images_list):
       image_annotation_df = annotations_df[annotations_df['img_name']==image_name][['class', 'cx', 'cy', 'wb', 'hb']].copy()
       np.savetxt(os.path.join(output_data_folder, 'labels', typeset, os.path.splitext(image_name)[0]+'.txt'), image_annotation_df[['class','cx', 'cy', 'wb', 'hb']].values, ['%i', '%1.4f','%1.4f','%1.4f','%1.4f'])
       os.link(os.path.join(data_folder, image_name),os.path.join(output_data_folder, 'images', typeset, image_name))
@@ -124,14 +144,10 @@ if __name__ == "__main__":
     for annotation_file in os.listdir(args.labels):
       if os.path.splitext(annotation_file)[-1].lower() == '.csv':
         typeset = os.path.splitext(annotation_file)[0].split("_")[1]
-        # Create 'images/typeset' and 'labels/typeset' folders in case they do not exist
+        # Create 'images/typeset' and 'labels/typeset' folders for every typeset if they do not exist
         if not os.path.isdir(os.path.join(args.output_data_folder,'images', typeset)):
           os.makedirs(os.path.join(args.output_data_folder,'images', typeset))
         if not os.path.isdir(os.path.join(args.output_data_folder,'labels', typeset)):
           os.makedirs(os.path.join(args.output_data_folder,'labels', typeset))
         # Create structure for a given set (train, val or test)
-        main(args.data_folder, os.path.join(args.labels, annotation_file), args.output_data_folder)
-
-    # config_dict = {'path': '../data', 'train': 'images/train', 'val':'images/val', 'test':'images/test', 'nc': 1, 'names':["object"]}
-    # with open(os.path.join(args.output_data_folder, 'config.yaml'), 'w') as file:
-    #   yaml.dump(config_dict, file)
+        main(args.data_folder, os.path.join(args.labels, annotation_file), args.output_data_folder, args.corrupted_imgs_txt)
