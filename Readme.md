@@ -74,6 +74,12 @@ $ mkdir data
 $ cd data
 $ aws s3 sync s3://anyoneai-datasets/SKU-110K/SKU110K_fixed/ SKU-110K_fixed
 ```
+### Via Script
+Alternatively, you can download the dataset by running the downloader.py  (Do step 3 first)
+
+```bash
+$ python3 /home/app/src/utils/downloader.py
+```
 
 ## 3. Run Docker Container
 
@@ -88,3 +94,10 @@ $ docker run --rm --net host -it -v "$(pwd)":/home/app/src --workdir /home/app/s
 ```bash
 $ docker run --rm --net host --gpus all -it -v "$(pwd)":/home/app/src --workdir /home/app/src ins_inv_mng_obj_detect_gpu_jc bash
 ```
+
+## 4. Run Notebooks
+
+Open and run the notebooks located in notebooks/ folder in the following order:
+- **EDA.pynb** Make an exploratory data analisys.
+- **Experiments** Create (split) the data set and run training experiments. Move your best.pt wieghts file to model/models folder in machine learnin service container.
+- **Evaluation** Evaluarte your trained models in the test set.
